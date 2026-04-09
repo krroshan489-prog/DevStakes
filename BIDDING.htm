@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BidX Chain AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --neon-cyan: #00f5ff;
+    --neon-purple: #bf00ff;
+    --neon-green: #00ff88;
+    --neon-orange: #ff6b00;
+    --neon-pink: #ff0080;
+    --bg-deep: #030712;
+    --bg-card: rgba(255,255,255,0.03);
+    --bg-card-hover: rgba(255,255,255,0.06);
+    --border-glow: rgba(0,245,255,0.2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg-deep);
+    color: #e2e8f0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated grid background ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,245,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(191,0,255,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glass card ── */
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,245,255,0.12);
+    border-radius: 16px;
+  }
+  .glass-bright {
+    background: rgba(0,245,255,0.04);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(0,245,255,0.25);
+    border-radius: 16px;
+  }
+
+  /* ── Neon text ── */
+  .neon-cyan { color: var(--neon-cyan); }
+  .neon-purple { color: var(--neon-purple); }
+  .neon-green { color: var(--neon-green); }
+  .neon-orange { color: var(--neon-orange); }
+  .neon-pink { color: var(--neon-pink); }
+
+  .text-glow-cyan { text-shadow: 0 0 10px var(--neon-cyan), 0 0 30px rgba(0,245,255,0.4); }
+  .text-glow-purple { text-shadow: 0 0 10px var(--neon-purple), 0 0 30px rgba(191,0,255,0.4); }
+  .text-glow-green { text-shadow: 0 0 10px var(--neon-green), 0 0 30px rgba(0,255,136,0.4); }
+
+  /* ── Orbitron headings ── */
+  .font-orbitron { font-family: 'Orbitron', monospace; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Neon buttons ── */
+  .btn-neon-cyan {
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-neon-cyan::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--neon-cyan);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .btn-neon-cyan:hover {
+    box-shadow: 0 0 20px rgba(0,245,255,0.4), 0 0 40px rgba(0,245,255,0.15);
+    transform: translateY(-1px);
+  }
+  .btn-neon-cyan:hover::before { opacity: 0.08; }
+  .btn-neon-cyan:active { transform: translateY(0); }
+
+  .btn-neon-purple {
+    background: transparent;
+    border: 1px solid var(--neon-purple);
+    color: var(--neon-purple);
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+  }
+  .btn-neon-purple:hover {
+    box-shadow: 0 0 20px rgba(191,0,255,0.4);
+    transform: translateY(-1px);
+    background: rgba(191,0,255,0.08);
+  }
+
+  .btn-neon-green {
+    background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,245,255,0.1));
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 12px 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    transition: all 0.25s ease;
+  }
+  .btn-neon-green:hover {
+    box-shadow: 0 0 25px rgba(0,255,136,0.5), 0 0 50px rgba(0,255,136,0.2);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, rgba(0,255,136,0.25), rgba(0,245,255,0.15));
+  }
+  .btn-neon-green:disabled {
+    opacity: 0.4; cursor: not-allowed; transform: none;
+    box-shadow: none;
+  }
+
+  .btn-neon-orange {
+    background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,0,128,0.1));
+    border: 1px solid var(--neon-orange);
+    color: var(--neon-orange);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+  .btn-neon-orange:hover {
+    box-shadow: 0 0 20px rgba(255,107,0,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ── Price pop animation ── */
+  @keyframes pricePop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.18); filter: brightness(1.5); }
+    60% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+  .price-pop { animation: pricePop 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+  /* ── Timer pulse ── */
+  @keyframes timerPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(0,245,255,0.3); }
+    50% { box-shadow: 0 0 24px rgba(0,245,255,0.7), 0 0 48px rgba(0,245,255,0.3); }
+  }
+  .timer-pulse { animation: timerPulse 2s ease-in-out infinite; }
+  @keyframes timerUrgent {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,0,128,0.4); }
+    50% { box-shadow: 0 0 30px rgba(255,0,128,0.8), 0 0 60px rgba(255,0,128,0.4); }
+  }
+  .timer-urgent { animation: timerUrgent 0.6s ease-in-out infinite; border-color: var(--neon-pink) !important; }
+
+  /* ── Bid feed slide-in ── */
+  @keyframes bidSlide {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .bid-slide { animation: bidSlide 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+  /* ── Floating chatbot bounce ── */
+  @keyframes floatBot {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .float-bot { animation: floatBot 3s ease-in-out infinite; }
+
+  /* ── Confetti ── */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    top: -10px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+    z-index: 9999;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── Heat bar ── */
+  .heat-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px rgba(0,245,255,0.5);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.3); border-radius: 2px; }
+
+  /* ── NFT card shimmer ── */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .nft-shimmer {
+    background: linear-gradient(90deg,
+      transparent 0%, rgba(0,245,255,0.1) 40%,
+      rgba(191,0,255,0.15) 50%,
+      rgba(0,245,255,0.1) 60%, transparent 100%);
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 2px dashed rgba(0,245,255,0.3);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .upload-zone:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0,245,255,0.03);
+    box-shadow: 0 0 20px rgba(0,245,255,0.1);
+  }
+  .upload-zone.drag-over {
+    border-color: var(--neon-green);
+    background: rgba(0,255,136,0.05);
+    box-shadow: 0 0 30px rgba(0,255,136,0.2);
+  }
+
+  /* ── Status badge ── */
+  .badge-live {
+    background: rgba(0,255,136,0.15);
+    border: 1px solid rgba(0,255,136,0.4);
+    color: var(--neon-green);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .badge-live::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    box-shadow: 0 0 6px var(--neon-green);
+    animation: timerPulse 1.5s ease-in-out infinite;
+  }
+
+  .badge-anomaly {
+    background: rgba(255,0,128,0.15);
+    border: 1px solid rgba(255,0,128,0.4);
+    color: var(--neon-pink);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    display: inline-block;
+  }
+
+  /* ── Input ── */
+  .neon-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 10px 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .neon-input:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0,245,255,0.2);
+  }
+  .neon-input::placeholder { color: rgba(226,232,240,0.3); }
+
+  /* ── Tabs ── */
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgba(226,232,240,0.5);
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active {
+    background: rgba(0,245,255,0.1);
+    border-color: rgba(0,245,255,0.3);
+    color: var(--neon-cyan);
+  }
+  .tab-btn:hover:not(.active) { color: rgba(226,232,240,0.8); }
+
+  /* ── Chat bubble ── */
+  .chat-user { background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.15); border-radius: 12px 12px 0 12px; }
+  .chat-ai { background: rgba(191,0,255,0.08); border: 1px solid rgba(191,0,255,0.2); border-radius: 12px 12px 12px 0; }
+
+  /* ── Wallet address ── */
+  .wallet-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--neon-cyan);
+    background: rgba(0,245,255,0.06);
+    border: 1px solid rgba(0,245,255,0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* ── Progress ring ── */
+  .progress-ring-circle {
+    transition: stroke-dashoffset 0.5s ease;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  /* Scrollable areas */
+  .scroll-area { overflow-y: auto; scrollbar-width: thin; }
+
+  /* Section labels */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(226,232,240,0.4);
+    margin-bottom: 8px;
+  }
+
+  /* Glow dividers */
+  .glow-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,245,255,0.3), transparent);
+    margin: 12px 0;
+  }
+
+  /* Loading dots */
+  @keyframes loadDot {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  .load-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-cyan); animation: loadDot 1.2s infinite; }
+  .load-dot:nth-child(2) { animation-delay: 0.2s; }
+  .load-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Anomaly flash */
+  @keyframes anomalyFlash {
+    0%, 100% { background: rgba(255,0,128,0.05); }
+    50% { background: rgba(255,0,128,0.15); }
+  }
+  .anomaly-flash { animation: anomalyFlash 0.8s ease infinite; }
+
+  /* TX hash */
+  .tx-hash {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    word-break: break-all;
+    color: rgba(0,245,255,0.7);
+  }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; }
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(3,7,18,0.95);
+    border: 1px solid rgba(0,245,255,0.2);
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+  }
+  .tooltip-wrap:hover .tooltip { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ─────────────────────────────── APP ROOT ─────────────────────────────── -->
+<div id="app" style="position:relative;z-index:1;">
+
+<!-- NAV -->
+<nav style="
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(3,7,18,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(0,245,255,0.1);
+  padding: 14px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div style="
+      width:36px;height:36px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      border-radius: 10px;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Orbitron',monospace;font-weight:900;font-size:14px;color:#030712;
+    ">BX</div>
+    <span class="font-orbitron" style="font-size:18px;font-weight:700;color:var(--neon-cyan);text-shadow:0 0 12px rgba(0,245,255,0.5);">
+      BidX<span style="color:var(--neon-purple);">Chain</span> <span style="font-size:13px;color:rgba(226,232,240,0.6);">AI</span>
+    </span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="badge-live">LIVE AUCTION</span>
+    <div id="nav-wallet-status" style="font-size:12px;color:rgba(226,232,240,0.5);">
+      Wallet not connected
+    </div>
+    <button class="btn-neon-cyan" onclick="connectWallet()" id="connect-btn" style="font-size:12px;padding:8px 18px;">
+      Connect Wallet
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN GRID -->
+<div style="
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 20px;
+  padding: 24px 24px 100px;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: start;
+">
+
+<!-- ═══════════════════ LEFT PANEL ═══════════════════ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+  <!-- WALLET PANEL -->
+  <div class="glass" style="padding:20px;">
+    <div class="section-label">Wallet</div>
+    <div id="wallet-panel">
+      <div style="text-align:center;padding:12px 0;">
+        <div style="
+          width:56px;height:56px;border-radius:50%;
+          border:2px solid rgba(0,245,255,0.3);
+          display:flex;align-items:center;justify-content:center;
+          margin:0 auto 12px;
+          background:rgba(0,245,255,0.05);
+        ">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--neon-cyan)">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 3l4 4-4 4"/>
+            <path d="M20 7H4"/>
+          </svg>
+        </div>
+        <p style="font-size:12px;color:rgba(226,232,240,0.5);margin-bottom:12px;">Connect MetaMask to participate in auctions</p>
+        <button class="btn-neon-cyan" onclick="connectWallet()" style="width:100%;">
+          Connect MetaMask
+        </button>
+      </div>
+    </div>
+    <div id="wallet-connected" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);"></div>
+        <span style="font-size:12px;color:var(--neon-green);">Connected</span>
+      </div>
+      <div class="wallet-addr" id="wallet-addr-display" style="margin-bottom:12px;"></div>
+      <div class="glow-divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;color:rgba(226,232,240,0.5);">Balance</span>
+        <span class="font-mono neon-cyan" style="font-size:14px;font-weight:600;" id="wallet-balance">0.00 ETH</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:rgba(226,232,240,0.5);">Network</span>
+        <span style="font-size:12px;color:var(--neon-purple);">Sepolia</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT PANEL -->
+  <div class="glass" style="padding:20px;">
+    <div class="section-label">Payment & Escrow</div>
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:rgba(226,232,240,0.5);">Escrowed Amount</span>
+        <span class="font-mono" style="font-size:12px;color:var(--neon-green);" id="escrow-amount">0.000 ETH</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:rgba(226,232,240,0.5);">Status</span>
+        <span style="font-size:11px;" id="escrow-status" style="color:rgba(226,232,240,0.4);">Idle</span>
+      </div>
+    </div>
+    <div class="glow-divider"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn-neon-green" onclick="depositEscrow()" style="font-size:12px;padding:8px 16px;" id="deposit-btn">
+        Deposit to Escrow
+      </button>
+      <button class="btn-neon-orange" onclick="paySeller()" style="font-size:12px;padding:8px 16px;" id="pay-btn">
+        Pay Seller (Winner)
+      </button>
+    </div>
+    <div id="tx-area" style="display:none;margin-top:12px;">
+      <div class="section-label">TX Hash</div>
+      <div class="tx-hash" id="tx-hash-display"></div>
+    </div>
+  </div>
+
+  <!-- NFT PANEL -->
+  <div class="glass" style="padding:20px;">
+    <div class="section-label">NFT Certificate</div>
+    <div id="nft-panel-content">
+      <div style="
+        border-radius:10px;overflow:hidden;margin-bottom:12px;
+        background: linear-gradient(135deg, rgba(191,0,255,0.15), rgba(0,245,255,0.1));
+        border: 1px solid rgba(191,0,255,0.3);
+        padding: 20px; text-align: center;
+        position: relative;
+      " class="nft-shimmer">
+        <div style="font-family:'Orbitron',monospace;font-size:10px;letter-spacing:0.1em;color:rgba(226,232,240,0.4);margin-bottom:6px;">BidX CHAIN AI</div>
+        <div style="font-size:28px;margin-bottom:4px;" id="nft-placeholder-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto;display:block;">
+            <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="rgba(191,0,255,0.6)" stroke-width="1.5" fill="rgba(191,0,255,0.05)"/>
+            <path d="M24 12L36 18V30L24 36L12 30V18L24 12Z" stroke="rgba(0,245,255,0.6)" stroke-width="1" fill="rgba(0,245,255,0.05)"/>
+            <circle cx="24" cy="24" r="4" fill="rgba(0,245,255,0.5)"/>
+          </svg>
+        </div>
+        <div style="font-size:11px;color:rgba(226,232,240,0.5);">Awaiting Auction End</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(0,245,255,0.4);margin-top:4px;" id="nft-token-id">#????</div>
+      </div>
+      <button class="btn-neon-purple" onclick="mintNFT()" style="width:100%;font-size:12px;padding:9px;">
+        Mint NFT Certificate
+      </button>
+    </div>
+    <div id="nft-minted" style="display:none;">
+      <div style="
+        border-radius:10px;overflow:hidden;
+        background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(191,0,255,0.1));
+        border: 1px solid rgba(0,255,136,0.4);
+        padding: 16px; text-align: center;
+        box-shadow: 0 0 20px rgba(0,255,136,0.15);
+      ">
+        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.12em;color:var(--neon-green);margin-bottom:6px;">NFT MINTED</div>
+        <div id="nft-item-title" style="font-size:13px;font-weight:600;margin-bottom:4px;"></div>
+        <div class="font-mono" style="font-size:10px;color:var(--neon-purple);" id="nft-mint-id"></div>
+        <div class="glow-divider"></div>
+        <div style="font-size:10px;color:rgba(226,232,240,0.5);">Ownership Verified On-Chain</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- ═══════════════════ END LEFT ═══════════════════ -->
+
+
+<!-- ═══════════════════ CENTER PANEL ═══════════════════ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+
+  <!-- IMAGE-TO-AUCTION UPLOAD -->
+  <div class="glass" style="padding:24px;" id="upload-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <div class="section-label">Step 1</div>
+        <h2 class="font-orbitron" style="font-size:16px;font-weight:700;color:var(--neon-cyan);">Image-to-Auction AI</h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="tab-btn active" onclick="setUploadTab('upload',this)">Upload</button>
+        <button class="tab-btn" onclick="setUploadTab('manual',this)">Manual</button>
+      </div>
+    </div>
+
+    <div id="tab-upload">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)">
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImageUpload(event)" />
+        <div id="upload-prompt">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="margin:0 auto 12px;display:block;opacity:0.5">
+            <rect x="5" y="10" width="30" height="24" rx="3" stroke="var(--neon-cyan)" stroke-width="1.5"/>
+            <path d="M13 22l5-5 4 4 3-3 4 4" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="15" cy="18" r="2" fill="var(--neon-cyan)"/>
+            <path d="M20 6v8M17 9l3-3 3 3" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p style="font-size:13px;color:rgba(226,232,240,0.6);">Drop image or <span style="color:var(--neon-cyan);">click to upload</span></p>
+          <p style="font-size:11px;color:rgba(226,232,240,0.3);margin-top:4px;">AI will analyze and generate auction details</p>
+        </div>
+        <div id="upload-preview" style="display:none;">
+          <img id="preview-img" style="max-height:140px;border-radius:8px;object-fit:contain;" />
+        </div>
+      </div>
+
+      <div id="analyzing-indicator" style="display:none;text-align:center;padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;">
+          <span class="load-dot"></span><span class="load-dot"></span><span class="load-dot"></span>
+        </div>
+        <p style="font-size:12px;color:var(--neon-cyan);">AI is analyzing your image...</p>
+      </div>
+    </div>
+
+    <div id="tab-manual" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input class="neon-input" id="manual-title" placeholder="Item Title" />
+        <textarea class="neon-input" id="manual-desc" placeholder="Description" rows="2" style="resize:vertical;"></textarea>
+        <input class="neon-input" id="manual-price" type="number" placeholder="Starting Price (USD)" />
+      </div>
+    </div>
+
+    <!-- AI Generated Details -->
+    <div id="ai-details" style="display:none;margin-top:16px;">
+      <div class="glow-divider"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);"></div>
+        <span style="font-size:11px;color:var(--neon-green);font-weight:600;">AI GENERATED</span>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:10px;color:rgba(226,232,240,0.4);margin-bottom:3px;">TITLE</div>
+        <div id="ai-title" style="font-size:15px;font-weight:600;color:#e2e8f0;"></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:10px;color:rgba(226,232,240,0.4);margin-bottom:3px;">DESCRIPTION</div>
+        <div id="ai-desc" style="font-size:12px;color:rgba(226,232,240,0.7);line-height:1.5;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:10px;color:rgba(226,232,240,0.4);margin-bottom:3px;">STARTING PRICE</div>
+          <div id="ai-price" class="font-orbitron neon-green" style="font-size:20px;font-weight:700;"></div>
+        </div>
+        <button class="btn-neon-green" onclick="startAuction()" id="start-auction-btn">
+          Start Auction
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUCTION CARD -->
+  <div class="glass-bright" style="padding:24px;" id="auction-card" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
+      <div>
+        <div class="badge-live">AUCTION LIVE</div>
+        <h2 id="auction-title" class="font-orbitron" style="font-size:18px;font-weight:700;margin-top:8px;color:#f1f5f9;"></h2>
+        <p id="auction-desc" style="font-size:12px;color:rgba(226,232,240,0.5);margin-top:4px;max-width:400px;line-height:1.5;"></p>
+      </div>
+      <!-- TIMER -->
+      <div id="timer-display" style="text-align:center;">
+        <svg width="80" height="80" viewBox="0 0 80 80" class="timer-pulse" style="display:block;">
+          <circle cx="40" cy="40" r="34" stroke="rgba(0,245,255,0.1)" stroke-width="6" fill="none"/>
+          <circle id="timer-ring" cx="40" cy="40" r="34"
+            stroke="var(--neon-cyan)" stroke-width="6" fill="none"
+            stroke-dasharray="213.6" stroke-dashoffset="0"
+            class="progress-ring-circle"
+            style="transform-origin:40px 40px;"/>
+          <text x="40" y="36" text-anchor="middle" font-family="Orbitron,monospace" font-size="16" font-weight="700" fill="var(--neon-cyan)" id="timer-text">60</text>
+          <text x="40" y="48" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="9" fill="rgba(226,232,240,0.4)">seconds</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- CURRENT BID DISPLAY -->
+    <div style="
+      background: linear-gradient(135deg, rgba(0,245,255,0.06), rgba(191,0,255,0.04));
+      border: 1px solid rgba(0,245,255,0.2);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    ">
+      <div>
+        <div class="section-label">Current Bid</div>
+        <div class="font-orbitron text-glow-cyan" id="current-bid-display" style="font-size:36px;font-weight:900;">$0</div>
+        <div style="font-size:12px;color:rgba(226,232,240,0.5);margin-top:4px;">
+          by <span id="top-bidder" class="neon-purple">---</span>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="section-label">Bid Count</div>
+        <div class="font-orbitron" id="bid-count" style="font-size:24px;font-weight:700;color:var(--neon-green);">0</div>
+        <div style="font-size:11px;color:rgba(226,232,240,0.4);">total bids</div>
+      </div>
+    </div>
+
+    <!-- BID INPUT -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;" id="bid-input-area">
+      <input class="neon-input" id="bid-amount" type="number" placeholder="Enter your bid amount ($)" style="flex:1;" />
+      <button class="btn-neon-green" onclick="placeBid()" id="bid-btn" style="white-space:nowrap;">
+        Place Bid
+      </button>
+    </div>
+
+    <!-- ML SUGGESTION BAR -->
+    <div style="
+      background: rgba(191,0,255,0.06);
+      border: 1px solid rgba(191,0,255,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size:12px;
+    ">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--neon-purple)" stroke-width="1.5">
+          <path d="M7 1l1.5 3h3.5l-2.8 2.1 1 3.4L7 7.6l-3.2 1.9 1-3.4L2 4h3.5z"/>
+        </svg>
+        <span style="color:rgba(226,232,240,0.6);">ML Suggested Bid:</span>
+        <span class="font-mono neon-purple" id="ml-suggestion">---</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="anomaly-badge" style="display:none;" class="badge-anomaly">Anomaly Detected</span>
+        <button onclick="applyMLSuggestion()" style="
+          font-size:11px;padding:4px 10px;
+          background:rgba(191,0,255,0.1);border:1px solid rgba(191,0,255,0.3);
+          border-radius:4px;color:var(--neon-purple);cursor:pointer;
+        ">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BID HISTORY CHART -->
+  <div class="glass" style="padding:20px;" id="chart-section" style="display:none;">
+    <div class="section-label">Bid History</div>
+    <canvas id="bid-chart" height="80"></canvas>
+  </div>
+
+</div>
+<!-- ═══════════════════ END CENTER ═══════════════════ -->
+
+
+<!-- ═══════════════════ RIGHT PANEL ═══════════════════ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+  <!-- LIVE BIDS FEED -->
+  <div class="glass" style="padding:20px;max-height:320px;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="section-label" style="margin-bottom:0;">Live Bids Feed</div>
+      <div class="badge-live" style="font-size:9px;" id="feed-status">WAITING</div>
+    </div>
+    <div id="bids-feed" class="scroll-area" style="flex:1;max-height:240px;display:flex;flex-direction:column;gap:6px;">
+      <div style="text-align:center;padding:20px;font-size:12px;color:rgba(226,232,240,0.3);">
+        Waiting for bids...
+      </div>
+    </div>
+  </div>
+
+  <!-- AI INSIGHTS PANEL -->
+  <div class="glass" style="padding:20px;">
+    <div class="section-label">AI + ML Insights</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Momentum / Heat -->
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:12px;color:rgba(226,232,240,0.6);">Auction Heat</span>
+          <span class="font-mono neon-orange" id="heat-score" style="font-size:12px;">0%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+          <div class="heat-bar" id="heat-bar" style="width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="glow-divider"></div>
+
+      <!-- Predictions -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:12px;color:rgba(226,232,240,0.5);">Linear Predict</span>
+          <span class="font-mono neon-cyan" id="linear-predict" style="font-size:12px;">---</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:12px;color:rgba(226,232,240,0.5);">Velocity Predict</span>
+          <span class="font-mono neon-purple" id="velocity-predict" style="font-size:12px;">---</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:12px;color:rgba(226,232,240,0.5);">Bid Velocity</span>
+          <span class="font-mono" id="bid-velocity" style="font-size:12px;color:var(--neon-green);">---</span>
+        </div>
+      </div>
+
+      <div class="glow-divider"></div>
+
+      <!-- Anomaly Log -->
+      <div>
+        <div class="section-label">Anomaly Log</div>
+        <div id="anomaly-log" class="scroll-area" style="max-height:100px;display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:11px;color:rgba(226,232,240,0.3);text-align:center;padding:8px;">No anomalies detected</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRACT STATUS -->
+  <div class="glass" style="padding:20px;">
+    <div class="section-label">Smart Contract</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:rgba(226,232,240,0.5);">Contract</span>
+        <span class="font-mono" style="font-size:10px;color:var(--neon-cyan);" id="contract-address">0x0000...0000</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:rgba(226,232,240,0.5);">Seller</span>
+        <span class="font-mono" style="font-size:10px;color:rgba(226,232,240,0.4);" id="contract-seller">---</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:rgba(226,232,240,0.5);">Winner</span>
+        <span class="font-mono" style="font-size:10px;color:var(--neon-green);" id="contract-winner">TBD</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:rgba(226,232,240,0.5);">State</span>
+        <span style="font-size:11px;" id="contract-state" class="neon-cyan">Idle</span>
+      </div>
+      <div class="glow-divider"></div>
+      <button class="btn-neon-cyan" onclick="setWinner()" style="font-size:11px;padding:7px;">
+        Set Winner
+      </button>
+    </div>
+  </div>
+
+</div>
+<!-- ═══════════════════ END RIGHT ═══════════════════ -->
+
+</div><!-- END MAIN GRID -->
+</div><!-- END APP ROOT -->
+
+
+<!-- ═══════════════ FLOATING CHATBOT ═══════════════ -->
+<div id="chatbot-fab" class="float-bot" style="
+  position: fixed;
+  bottom: 28px; right: 28px;
+  z-index: 200;
+">
+  <button onclick="toggleChat()" style="
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(0,245,255,0.4), 0 0 40px rgba(191,0,255,0.2);
+    transition: transform 0.2s;
+  " onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" id="chat-icon">
+      <path d="M4 4h18v13H4z" rx="3" stroke="#030712" stroke-width="1.5" fill="rgba(3,7,18,0.5)"/>
+      <path d="M4 17l3 4" stroke="#030712" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="9" cy="10.5" r="1.5" fill="#030712"/>
+      <circle cx="13" cy="10.5" r="1.5" fill="#030712"/>
+      <circle cx="17" cy="10.5" r="1.5" fill="#030712"/>
+    </svg>
+  </button>
+  <!-- Notification dot -->
+  <div id="chat-notif" style="
+    position:absolute;top:2px;right:2px;
+    width:14px;height:14px;border-radius:50%;
+    background:var(--neon-pink);
+    box-shadow:0 0 8px var(--neon-pink);
+    border:2px solid var(--bg-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;font-weight:700;color:#030712;
+  ">1</div>
+</div>
+
+<!-- CHATBOT PANEL -->
+<div id="chatbot-panel" style="
+  position: fixed;
+  bottom: 100px; right: 28px;
+  width: 360px;
+  max-height: 500px;
+  z-index: 199;
+  display: none;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(0,245,255,0.2);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(191,0,255,0.1);
+  background: rgba(3,7,18,0.92);
+  backdrop-filter: blur(24px);
+  animation: chatSlide 0.3s cubic-bezier(0.22,1,0.36,1);
+">
+
+  <!-- Chat Header -->
+  <div style="
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(191,0,255,0.15), rgba(0,245,255,0.08));
+    border-bottom: 1px solid rgba(0,245,255,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+  ">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="
+        width:32px;height:32px;border-radius:50%;
+        background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+        display:flex;align-items:center;justify-content:center;
+        font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#030712;
+      ">AI</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--neon-cyan);">BidX AI Assistant</div>
+        <div style="font-size:10px;color:rgba(226,232,240,0.4);">Powered by GPT-4 Vision</div>
+      </div>
+    </div>
+    <button onclick="toggleChat()" style="background:none;border:none;cursor:pointer;color:rgba(226,232,240,0.5);font-size:18px;padding:4px;">x</button>
+  </div>
+
+  <!-- Chat Messages -->
+  <div id="chat-messages" class="scroll-area" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;">
+    <div class="chat-ai" style="padding:12px 14px;font-size:12px;line-height:1.6;max-width:90%;">
+      Hello! I'm the BidX AI assistant. I can help you with the current auction status, bid suggestions, and market insights.
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="padding:8px 12px;border-top:1px solid rgba(0,245,255,0.08);display:flex;gap:6px;flex-wrap:wrap;">
+    <button onclick="quickChat('What is the current bid?')" style="font-size:10px;padding:4px 8px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.15);border-radius:12px;color:rgba(226,232,240,0.6);cursor:pointer;">Current bid?</button>
+    <button onclick="quickChat('What should I bid?')" style="font-size:10px;padding:4px 8px;background:rgba(191,0,255,0.06);border:1px solid rgba(191,0,255,0.15);border-radius:12px;color:rgba(226,232,240,0.6);cursor:pointer;">Bid suggestion?</button>
+    <button onclick="quickChat('Auction status?')" style="font-size:10px;padding:4px 8px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.15);border-radius:12px;color:rgba(226,232,240,0.6);cursor:pointer;">Status?</button>
+  </div>
+
+  <!-- Chat Input -->
+  <div style="padding:12px 16px;border-top:1px solid rgba(0,245,255,0.08);display:flex;gap:8px;">
+    <input id="chat-input" class="neon-input" placeholder="Ask about the auction..." style="flex:1;font-size:12px;padding:8px 12px;"
+      onkeydown="if(event.key==='Enter')sendChatMessage()" />
+    <button onclick="sendChatMessage()" style="
+      background:linear-gradient(135deg,var(--neon-purple),var(--neon-cyan));
+      border:none;border-radius:6px;cursor:pointer;
+      padding:8px 14px;font-size:12px;color:#030712;font-weight:700;
+      white-space:nowrap;
+    ">Send</button>
+  </div>
+</div>
+
+<style>
+@keyframes chatSlide {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</style>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- CONFETTI CONTAINER -->
+<div id="confetti-container"></div>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+// ════════════════════════════════════════════════════════
+//  BidX Chain AI — Frontend Application Logic
+//  All features simulated with realistic mock data
+// ════════════════════════════════════════════════════════
+
+// ─── Global State ───
+const state = {
+  wallet: null,
+  auction: {
+    active: false,
+    title: '',
+    description: '',
+    startingPrice: 0,
+    currentBid: 0,
+    highestBidder: null,
+    bids: [],          // [{ user, amount, timestamp }]
+    timer: 60,
+    maxTimer: 60,
+    ended: false,
+  },
+  escrow: { deposited: 0, status: 'idle' },
+  nft: { minted: false, tokenId: null },
+  contract: { address: '0xA3f7...9B2c', state: 'Idle', winner: null },
+  ml: {
+    linearPredict: null,
+    velocityPredict: null,
+    heatScore: 0,
+    velocity: 0,
+    anomalies: [],
+  },
+  chat: { open: false },
+};
+
+// Bidder names for simulation
+const BIDDERS = ['0xAlice','0xBob','0xCarol','0xDave','0xEve','0xFrank','0xGrace'];
+let timerInterval = null;
+let bidChart = null;
+let lastBidTime = null;
+
+// ─── WALLET ───
+async function connectWallet() {
+  // Simulate MetaMask connect (real: window.ethereum.request)
+  const mockAddr = '0x' + Array.from({length:40}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+  state.wallet = {
+    address: mockAddr,
+    balance: (Math.random() * 5 + 0.5).toFixed(4),
+    shortAddr: mockAddr.slice(0,6) + '...' + mockAddr.slice(-4),
+  };
+  updateWalletUI();
+  showToast('Wallet connected!', 'success');
+}
+
+function updateWalletUI() {
+  if (!state.wallet) return;
+  document.getElementById('wallet-panel').style.display = 'none';
+  document.getElementById('wallet-connected').style.display = 'block';
+  document.getElementById('wallet-addr-display').textContent = state.wallet.shortAddr;
+  document.getElementById('wallet-balance').textContent = state.wallet.balance + ' ETH';
+  document.getElementById('nav-wallet-status').textContent = state.wallet.shortAddr;
+  document.getElementById('nav-wallet-status').style.color = 'var(--neon-green)';
+  document.getElementById('connect-btn').style.display = 'none';
+  document.getElementById('contract-seller').textContent = state.wallet.shortAddr;
+}
+
+// ─── IMAGE UPLOAD ───
+function setUploadTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-upload').style.display = tab === 'upload' ? 'block' : 'none';
+  document.getElementById('tab-manual').style.display = tab === 'manual' ? 'block' : 'none';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) processImage(file);
+}
+
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (file) processImage(file);
+}
+
+function processImage(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('preview-img').src = dataUrl;
+    document.getElementById('upload-prompt').style.display = 'none';
+    document.getElementById('upload-preview').style.display = 'block';
+
+    document.getElementById('analyzing-indicator').style.display = 'block';
+    document.getElementById('ai-details').style.display = 'none';
+
+    await analyzeImageWithClaude(dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeImageWithClaude(dataUrl) {
+  // Extract base64 data and media type from the data URL
+  const [meta, base64Data] = dataUrl.split(',');
+  const mediaType = meta.match(/:(.*?);/)[1]; // e.g. "image/jpeg"
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are an expert auction house appraiser. Analyze the item in the image and return ONLY a valid JSON object with no extra text, markdown, or explanation. The JSON must have exactly these keys:
+- "title": a concise, compelling auction listing title (max 60 chars)
+- "description": a 1-2 sentence professional description highlighting key attributes and condition
+- "price": a realistic starting auction price as a plain integer (USD), no symbols or commas
+- "confidence": one of "high", "medium", or "low" based on how clearly identifiable the item is
+
+If the item is unidentifiable, still return the JSON with title "Unknown Item", a neutral description, price 100, and confidence "low".`,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64Data }
+            },
+            {
+              type: 'text',
+              text: 'Analyze this auction item and return the JSON as instructed.'
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed: ' + response.status);
+
+    const data = await response.json();
+    const rawText = data.content.map(b => b.text || '').join('');
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    const item = JSON.parse(clean);
+
+    // Validate required fields
+    if (!item.title || !item.description || !item.price) throw new Error('Incomplete response');
+
+    applyAIResult(item);
+
+  } catch (err) {
+    console.error('Claude Vision error:', err);
+    showToast('AI analysis failed — using fallback', 'error');
+    // Fallback so the auction can still proceed
+    applyAIResult({
+      title: 'Uploaded Item',
+      description: 'Item uploaded for auction. Please review and edit details before starting.',
+      price: 500,
+      confidence: 'low'
+    });
+  }
+}
+
+function applyAIResult(item) {
+  document.getElementById('analyzing-indicator').style.display = 'none';
+  document.getElementById('ai-title').textContent = item.title;
+  document.getElementById('ai-desc').textContent = item.description + (item.confidence ? ` [AI confidence: ${item.confidence}]` : '');
+  document.getElementById('ai-price').textContent = '$' + Number(item.price).toLocaleString();
+  document.getElementById('ai-details').style.display = 'block';
+
+  state.auction.title = item.title;
+  state.auction.description = item.description;
+  state.auction.startingPrice = Number(item.price);
+  state.auction.currentBid = Number(item.price);
+
+  showToast('AI analysis complete!', 'success');
+}
+
+// ─── AUCTION ───
+function startAuction() {
+  if (state.auction.active) return;
+
+  const manualTitle = document.getElementById('manual-title').value;
+  if (manualTitle) {
+    state.auction.title = manualTitle;
+    state.auction.description = document.getElementById('manual-desc').value;
+    state.auction.startingPrice = parseFloat(document.getElementById('manual-price').value) || 1000;
+    state.auction.currentBid = state.auction.startingPrice;
+  }
+
+  if (!state.auction.title) { showToast('Please upload an image or fill manual fields', 'error'); return; }
+
+  state.auction.active = true;
+  state.auction.ended = false;
+  state.auction.bids = [];
+  state.auction.timer = 60;
+
+  // Show auction card
+  document.getElementById('auction-card').style.display = 'block';
+  document.getElementById('chart-section').style.display = 'block';
+  document.getElementById('auction-title').textContent = state.auction.title;
+  document.getElementById('auction-desc').textContent = state.auction.description;
+  updateBidDisplay(state.auction.currentBid);
+
+  // Init chart
+  initChart();
+
+  // Start timer
+  startTimer();
+
+  // Firebase sync simulation (real: firebase set/on)
+  simulateFirebase();
+
+  // Feed status
+  document.getElementById('feed-status').textContent = 'LIVE';
+
+  document.getElementById('start-auction-btn').disabled = true;
+  document.getElementById('start-auction-btn').textContent = 'Auction Live';
+
+  showToast('Auction started!', 'success');
+
+  // AI bots simulate bids
+  startBotBidding();
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  const maxT = state.auction.maxTimer;
+
+  timerInterval = setInterval(() => {
+    if (state.auction.timer <= 0) {
+      clearInterval(timerInterval);
+      endAuction();
+      return;
+    }
+    state.auction.timer--;
+    updateTimer(state.auction.timer, maxT);
+  }, 1000);
+}
+
+function updateTimer(t, maxT) {
+  const el = document.getElementById('timer-text');
+  const ring = document.getElementById('timer-ring');
+  const timerEl = document.getElementById('timer-display');
+  if (!el || !ring) return;
+
+  el.textContent = t;
+  const circumference = 213.6;
+  const offset = circumference * (1 - t / maxT);
+  ring.style.strokeDashoffset = offset;
+
+  // Change color on urgency
+  if (t <= 10) {
+    ring.style.stroke = 'var(--neon-pink)';
+    el.style.fill = 'var(--neon-pink)';
+    timerEl.classList.remove('timer-pulse');
+    timerEl.querySelector('svg').classList.add('timer-urgent');
+  } else if (t <= 20) {
+    ring.style.stroke = 'var(--neon-orange)';
+    el.style.fill = 'var(--neon-orange)';
+  }
+}
+
+// ─── BID PLACEMENT ───
+function placeBid() {
+  const input = document.getElementById('bid-amount');
+  const amount = parseFloat(input.value);
+
+  if (!state.wallet) { showToast('Connect wallet first!', 'error'); return; }
+  if (!state.auction.active) { showToast('No active auction', 'error'); return; }
+  if (isNaN(amount) || amount <= state.auction.currentBid) {
+    showToast('Bid must be higher than current bid!', 'error');
+    return;
+  }
+
+  processBid({ user: state.wallet.shortAddr, amount, timestamp: Date.now() });
+  input.value = '';
+}
+
+function processBid(bid) {
+  const prev = state.auction.currentBid;
+  const now = Date.now();
+
+  // Anomaly detection
+  const anomalies = detectAnomalies(bid, prev, now);
+
+  state.auction.currentBid = bid.amount;
+  state.auction.highestBidder = bid.user;
+  state.auction.bids.push({ ...bid, anomalies });
+
+  // 🤖 If real user bids → trigger bot reaction
+if (bid.user === state.wallet?.shortAddr) {
+  triggerBotReaction(bid.amount);
+}
+
+  // Reset timer on bid
+  state.auction.timer = Math.min(state.auction.timer + 10, 60);
+
+  // Update UI
+  updateBidDisplay(bid.amount);
+  addBidToFeed(bid, anomalies);
+  updateMLInsights();
+  updateChart(bid.amount);
+
+  // Update contract winner
+  document.getElementById('top-bidder').textContent = bid.user;
+  document.getElementById('bid-count').textContent = state.auction.bids.length;
+
+  lastBidTime = now;
+}
+
+
+function triggerBotReaction(userBidAmount) {
+    if (state.auction.bids.length > 30) return;
+if (Math.random() < 0.3) return;
+
+  const delay = 1200 + Math.random() * 1800;
+
+  setTimeout(() => {
+    if (!state.auction.active || state.auction.ended) return;
+
+    const bidder = BIDDERS[Math.floor(Math.random() * BIDDERS.length)];
+
+   let increment;
+
+if (state.auction.currentBid < 1000) {
+  increment = Math.floor(Math.random() * 15) + 5;
+} else if (state.auction.currentBid < 5000) {
+  increment = Math.floor(Math.random() * 30) + 10;
+} else {
+  increment = Math.floor(Math.random() * 60) + 20;
+}
+
+    processBid({
+      user: bidder,
+      amount: state.auction.currentBid + increment,
+      timestamp: Date.now()
+    });
+
+  }, delay);
+}
+
+
+function updateBidDisplay(amount) {
+  const el = document.getElementById('current-bid-display');
+  el.textContent = '$' + amount.toLocaleString();
+  el.classList.remove('price-pop');
+  void el.offsetWidth; // reflow
+  el.classList.add('price-pop');
+}
+
+// ─── BID FEED ───
+function addBidToFeed(bid, anomalies) {
+  const feed = document.getElementById('bids-feed');
+  // Remove empty state
+  const empty = feed.querySelector('[data-empty]');
+  if (empty) empty.remove();
+
+  const item = document.createElement('div');
+  item.className = 'bid-slide';
+  if (anomalies.length > 0) item.classList.add('anomaly-flash');
+
+  item.style.cssText = `
+    background: ${anomalies.length > 0 ? 'rgba(255,0,128,0.06)' : 'rgba(255,255,255,0.03)'};
+    border: 1px solid ${anomalies.length > 0 ? 'rgba(255,0,128,0.2)' : 'rgba(0,245,255,0.08)'};
+    border-radius: 8px; padding: 8px 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  `;
+  item.innerHTML = `
+    <div>
+      <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--neon-cyan);">${bid.user}</div>
+      ${anomalies.length > 0 ? '<div style="font-size:9px;color:var(--neon-pink);">! ' + anomalies[0] + '</div>' : ''}
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px;font-weight:700;font-family:'Orbitron',monospace;color:var(--neon-green);">$${bid.amount.toLocaleString()}</div>
+      <div style="font-size:9px;color:rgba(226,232,240,0.3);">${new Date(bid.timestamp).toLocaleTimeString()}</div>
+    </div>
+  `;
+
+  feed.insertBefore(item, feed.firstChild);
+
+  // Keep max 10 items
+  while (feed.children.length > 10) feed.removeChild(feed.lastChild);
+}
+
+// ─── ML FUNCTIONS ───
+function detectAnomalies(bid, prevBid, now) {
+  const anomalies = [];
+
+  // Fast bid check (<2 sec)
+ if (lastBidTime && (now - lastBidTime) < 1500)  {
+    anomalies.push('Speed bot detected (<2s)');
+  }
+
+  // Large jump check (>40%)
+  if (prevBid > 0 && (bid.amount - prevBid) / prevBid > 0.60) {
+    anomalies.push('Price spike >40%');
+  }
+
+  // Repeated user check
+  const userBidCount = state.auction.bids.filter(b => b.user === bid.user).length;
+  if (userBidCount >= 3) {
+    anomalies.push('Repeated bidder (x' + (userBidCount + 1) + ')');
+  }
+
+  if (anomalies.length > 0) {
+    state.ml.anomalies.unshift({ bid, anomalies, time: now });
+    updateAnomalyLog();
+    document.getElementById('anomaly-badge').style.display = 'inline-block';
+    setTimeout(() => { document.getElementById('anomaly-badge').style.display = 'none'; }, 3000);
+  }
+
+  return anomalies;
+}
+
+function linearRegression(bids) {
+  // Simple linear regression on bid amounts
+  if (bids.length < 2) return null;
+  const n = bids.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  bids.forEach((b, i) => {
+    sumX += i; sumY += b.amount;
+    sumXY += i * b.amount; sumX2 += i * i;
+  });
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  return Math.round(slope * n + intercept);
+}
+
+function velocityPrediction(bids) {
+  // Momentum-adjusted prediction
+  if (bids.length < 3) return null;
+  const last3 = bids.slice(-3);
+  const deltas = [];
+  for (let i = 1; i < last3.length; i++) {
+    deltas.push(last3[i].amount - last3[i-1].amount);
+  }
+  const avgDelta = deltas.reduce((a,b) => a+b, 0) / deltas.length;
+  const timeDeltas = [];
+  for (let i = 1; i < last3.length; i++) {
+    timeDeltas.push((last3[i].timestamp - last3[i-1].timestamp) / 1000);
+  }
+  const avgTimeDelta = timeDeltas.reduce((a,b)=>a+b,0) / timeDeltas.length;
+  const velocity = avgTimeDelta > 0 ? avgDelta / avgTimeDelta : 0;
+  state.ml.velocity = velocity.toFixed(2);
+  // Predict next bid adding velocity effect
+  return Math.round(bids[bids.length-1].amount + avgDelta * 1.15);
+}
+
+function momentumScore(bids) {
+  if (bids.length < 2) return 0;
+  const recentBids = bids.slice(-5);
+  const totalBids = bids.length;
+  const recentActivity = recentBids.length;
+  const avgJump = recentBids.reduce((acc, b, i) => {
+    if (i === 0) return acc;
+    return acc + (b.amount - recentBids[i-1].amount) / recentBids[i-1].amount;
+  }, 0) / Math.max(recentBids.length - 1, 1);
+  const score = Math.min(100, Math.round(
+    (totalBids * 5) + (recentActivity * 10) + (avgJump * 200)
+  ));
+  return score;
+}
+
+function updateMLInsights() {
+  const bids = state.auction.bids;
+  if (bids.length < 1) return;
+
+  const linear = linearRegression(bids);
+  const velocity = velocityPrediction(bids);
+  const heat = momentumScore(bids);
+
+  state.ml.linearPredict = linear;
+  state.ml.velocityPredict = velocity;
+  state.ml.heatScore = heat;
+
+  const suggestion = velocity || linear || Math.round(state.auction.currentBid * 1.08);
+  state.ml.suggestion = suggestion;
+
+  document.getElementById('linear-predict').textContent = linear ? '$' + linear.toLocaleString() : '---';
+  document.getElementById('velocity-predict').textContent = velocity ? '$' + velocity.toLocaleString() : '---';
+  document.getElementById('bid-velocity').textContent = state.ml.velocity ? '$' + state.ml.velocity + '/s' : '---';
+  document.getElementById('heat-score').textContent = heat + '%';
+  document.getElementById('heat-bar').style.width = heat + '%';
+  document.getElementById('ml-suggestion').textContent = suggestion ? '$' + suggestion.toLocaleString() : '---';
+}
+
+function applyMLSuggestion() {
+  if (state.ml.suggestion) {
+    document.getElementById('bid-amount').value = state.ml.suggestion;
+    showToast('ML suggestion applied!', 'info');
+  }
+}
+
+function updateAnomalyLog() {
+  const log = document.getElementById('anomaly-log');
+  log.innerHTML = '';
+  state.ml.anomalies.slice(0, 5).forEach(a => {
+    const el = document.createElement('div');
+    el.style.cssText = `
+      font-size:10px;padding:5px 8px;border-radius:4px;
+      background:rgba(255,0,128,0.08);border:1px solid rgba(255,0,128,0.2);
+    `;
+    el.innerHTML = `<span style="color:var(--neon-pink);">!</span> <span style="color:rgba(226,232,240,0.7);">${a.anomalies[0]}</span>
+      <span style="float:right;color:rgba(226,232,240,0.3);">${new Date(a.time).toLocaleTimeString()}</span>`;
+    log.appendChild(el);
+  });
+}
+
+// ─── CHART ───
+function initChart() {
+  const ctx = document.getElementById('bid-chart').getContext('2d');
+  if (bidChart) { bidChart.destroy(); }
+  bidChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Start'],
+      datasets: [{
+        label: 'Bid Amount',
+        data: [state.auction.startingPrice],
+        borderColor: 'rgba(0,245,255,0.8)',
+        backgroundColor: 'rgba(0,245,255,0.05)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'var(--neon-cyan)',
+        pointBorderColor: 'transparent',
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(3,7,18,0.9)',
+          borderColor: 'rgba(0,245,255,0.3)',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: 'var(--neon-cyan)',
+          callbacks: {
+            label: ctx => '$' + ctx.raw.toLocaleString()
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: 'rgba(226,232,240,0.3)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: 'rgba(226,232,240,0.3)', font: { size: 10 }, callback: v => '$' + v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+function updateChart(amount) {
+  if (!bidChart) return;
+  const label = '#' + state.auction.bids.length;
+  bidChart.data.labels.push(label);
+  bidChart.data.datasets[0].data.push(amount);
+  if (bidChart.data.labels.length > 15) {
+    bidChart.data.labels.shift();
+    bidChart.data.datasets[0].data.shift();
+  }
+  bidChart.update('none');
+}
+
+// ─── FIREBASE SIMULATION ───
+// Real: import { initializeApp } from "firebase/app"; etc.
+function simulateFirebase() {
+  console.log('[Firebase] Connected to realtime database');
+  console.log('[Firebase] Listening on /auctions/current');
+}
+
+// ─── BOT BIDDING (simulates real-time from other users) ───
+function startBotBidding() {
+  let botCount = 0;
+  const maxBots = 6;
+
+  function placeBotBid() {
+    if (!state.auction.active || state.auction.ended || botCount >= maxBots) return;
+
+    let timeLeft = state.auction.timer;
+    let delay;
+
+    if (timeLeft > 40) delay = 4000 + Math.random() * 1500;
+    else if (timeLeft > 20) delay = 2500 + Math.random() * 1200;
+    else delay = 1200 + Math.random() * 800;
+
+    setTimeout(() => {
+      if (!state.auction.active || state.auction.ended) return;
+
+      // ✅ CORRECT PLACE
+     if (lastBidTime && Date.now() - lastBidTime < 1000) {
+ setTimeout(placeBotBid, 900 + Math.random() * 900); // wait instead of instant loop
+  return;
+}
+
+      // 🎲 Skip chance
+      if (Math.random() < 0.25) {
+        placeBotBid();
+        return;
+      }
+
+      const bidder = BIDDERS[Math.floor(Math.random() * BIDDERS.length)];
+
+      let increment;
+      if (state.auction.currentBid < 1000) {
+        increment = Math.floor(Math.random() * 20) + 8;
+      } else if (state.auction.currentBid < 5000) {
+        increment = Math.floor(Math.random() * 50) + 15;
+      } else {
+        increment = Math.floor(Math.random() * 100) + 30;
+      }
+
+      processBid({
+        user: bidder,
+        amount: state.auction.currentBid + increment,
+        timestamp: Date.now()
+      });
+
+      botCount++;
+      placeBotBid();
+    }, delay);
+  }
+
+  // 🔥 START LOOP (DON'T REMOVE)
+  placeBotBid();
+}
+
+// ─── AUCTION END ───
+function endAuction() {
+  state.auction.active = false;
+  state.auction.ended = true;
+  document.getElementById('bid-input-area').style.display = 'none';
+
+  const winner = state.auction.highestBidder || 'Nobody';
+  state.contract.winner = winner;
+  state.contract.state = 'Ended';
+
+  document.getElementById('contract-winner').textContent = winner;
+  document.getElementById('contract-state').textContent = 'Ended';
+  document.getElementById('top-bidder').textContent = winner;
+
+  showToast('Auction ended! Winner: ' + winner, 'success');
+  launchConfetti();
+  document.getElementById('feed-status').textContent = 'ENDED';
+  document.getElementById('feed-status').style.background = 'rgba(255,107,0,0.15)';
+  document.getElementById('feed-status').style.color = 'var(--neon-orange)';
+}
+
+// ─── WEB3 FUNCTIONS ───
+// Real: uses ethers.js + deployed AuctionWeb3 contract
+
+async function depositEscrow() {
+  if (!state.wallet) { showToast('Connect wallet first!', 'error'); return; }
+  const amount = (state.auction.currentBid / 3500).toFixed(4); // USD to ETH rough
+  document.getElementById('deposit-btn').textContent = 'Depositing...';
+  await sleep(1500);
+  state.escrow.deposited = amount;
+  state.escrow.status = 'Deposited';
+  document.getElementById('escrow-amount').textContent = amount + ' ETH';
+  document.getElementById('escrow-status').textContent = 'Deposited';
+  document.getElementById('escrow-status').style.color = 'var(--neon-green)';
+  document.getElementById('deposit-btn').textContent = 'Deposit to Escrow';
+  const hash = generateTxHash();
+  showTxHash(hash);
+  showToast('Escrow deposit confirmed!', 'success');
+}
+
+async function paySeller() {
+  if (!state.wallet) { showToast('Connect wallet first!', 'error'); return; }
+  document.getElementById('pay-btn').textContent = 'Processing...';
+  await sleep(2000);
+  document.getElementById('pay-btn').textContent = 'Payment Sent!';
+  document.getElementById('contract-state').textContent = 'Settled';
+  document.getElementById('escrow-status').textContent = 'Paid to Seller';
+  document.getElementById('escrow-status').style.color = 'var(--neon-purple)';
+  const hash = generateTxHash();
+  showTxHash(hash);
+  showToast('Seller payment sent!', 'success');
+}
+
+async function setWinner() {
+  if (!state.wallet) { showToast('Connect wallet first!', 'error'); return; }
+  if (!state.auction.highestBidder) { showToast('No bids yet', 'error'); return; }
+  await sleep(1000);
+  state.contract.winner = state.auction.highestBidder;
+  document.getElementById('contract-winner').textContent = state.auction.highestBidder;
+  document.getElementById('contract-state').textContent = 'Winner Set';
+  document.getElementById('contract-state').style.color = 'var(--neon-green)';
+  showToast('Winner set on contract!', 'success');
+}
+
+async function mintNFT() {
+  if (!state.wallet) { showToast('Connect wallet first!', 'error'); return; }
+  if (!state.auction.title) { showToast('Start an auction first!', 'error'); return; }
+
+  document.querySelector('#nft-panel-content button').textContent = 'Minting...';
+  await sleep(2500);
+
+  const tokenId = Math.floor(Math.random() * 99999) + 1000;
+  state.nft.minted = true;
+  state.nft.tokenId = tokenId;
+
+  document.getElementById('nft-panel-content').style.display = 'none';
+  document.getElementById('nft-minted').style.display = 'block';
+  document.getElementById('nft-item-title').textContent = state.auction.title.slice(0, 30) + '...';
+  document.getElementById('nft-mint-id').textContent = 'Token #' + tokenId;
+
+  const hash = generateTxHash();
+  showTxHash(hash);
+  showToast('NFT minted! Token #' + tokenId, 'success');
+  launchConfetti();
+}
+
+// ─── CHATBOT ───
+function toggleChat() {
+  state.chat.open = !state.chat.open;
+  const panel = document.getElementById('chatbot-panel');
+  panel.style.display = state.chat.open ? 'flex' : 'none';
+  panel.style.flexDirection = 'column';
+  document.getElementById('chat-notif').style.display = state.chat.open ? 'none' : 'none';
+}
+
+function quickChat(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendChatMessage();
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  addChatMessage(msg, 'user');
+
+  // Add typing indicator
+  const typingEl = document.createElement('div');
+  typingEl.className = 'chat-ai';
+  typingEl.style.cssText = 'padding:10px 14px;font-size:12px;max-width:90%;';
+  typingEl.innerHTML = '<span class="load-dot"></span><span class="load-dot"></span><span class="load-dot"></span>';
+  typingEl.id = 'typing-indicator';
+  document.getElementById('chat-messages').appendChild(typingEl);
+  scrollChat();
+
+  await sleep(1200 + Math.random() * 800);
+
+  document.getElementById('typing-indicator')?.remove();
+  addChatMessage(generateAIResponse(msg), 'ai');
+}
+
+function addChatMessage(text, type) {
+  const msgs = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = type === 'user' ? 'chat-user' : 'chat-ai';
+  el.style.cssText = 'padding:10px 14px;font-size:12px;line-height:1.6;max-width:90%;animation:bidSlide 0.3s ease forwards;';
+  if (type === 'user') { el.style.alignSelf = 'flex-end'; el.style.marginLeft = 'auto'; }
+  el.textContent = text;
+  msgs.appendChild(el);
+  scrollChat();
+}
+
+function scrollChat() {
+  const msgs = document.getElementById('chat-messages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// Simulated AI responses (real: calls /api/chatbot with context)
+function generateAIResponse(msg) {
+  const low = msg.toLowerCase();
+  const bid = state.auction.currentBid;
+  const bidder = state.auction.highestBidder;
+  const suggestion = state.ml.suggestion;
+  const heat = state.ml.heatScore;
+
+  if (low.includes('current bid') || low.includes('bid now')) {
+    if (!bid) return 'No auction is currently active. Upload an image or fill the manual form to start one!';
+    return `Current bid is $${bid.toLocaleString()}, placed by ${bidder || 'no one yet'}. Auction heat is at ${heat}%.`;
+  }
+  if (low.includes('suggest') || low.includes('what should') || low.includes('recommend')) {
+    if (!suggestion) return 'Start the auction first and I can recommend based on ML analysis!';
+    return `Based on bid velocity and linear regression, I suggest bidding $${suggestion.toLocaleString()}. Heat score is ${heat}% — ${heat > 60 ? 'high competition!' : heat > 30 ? 'moderate activity.' : 'relatively calm market.'}`;
+  }
+  if (low.includes('status') || low.includes('auction')) {
+    if (!state.auction.active && !state.auction.ended) return 'No auction running. Upload an image to start one instantly!';
+    if (state.auction.ended) return `Auction has ended! Winner: ${state.auction.highestBidder || 'N/A'} with a final bid of $${bid.toLocaleString()}.`;
+    return `Auction is LIVE! ${state.auction.bids.length} bids so far. ${state.auction.timer}s remaining. Current leader: ${bidder}.`;
+  }
+  if (low.includes('anomaly') || low.includes('fraud') || low.includes('suspicious')) {
+    const count = state.ml.anomalies.length;
+    if (count === 0) return 'No anomalies detected so far. Bidding patterns look normal.';
+    return `${count} anomaly/anomalies detected: ${state.ml.anomalies[0]?.anomalies[0] || 'suspicious activity'}. Monitor closely!`;
+  }
+  if (low.includes('nft') || low.includes('mint')) {
+    return 'After the auction ends, click "Mint NFT Certificate" in the left panel. The winner receives an on-chain proof of ownership.';
+  }
+  if (low.includes('wallet') || low.includes('metamask')) {
+    return state.wallet ? `Wallet connected: ${state.wallet.shortAddr}. Balance: ${state.wallet.balance} ETH.` : 'Click "Connect Wallet" in the top-right to connect MetaMask.';
+  }
+  // Default
+  const defaults = [
+    `I'm monitoring the live auction. Heat score: ${heat}%. ${state.auction.bids.length} total bids recorded.`,
+    'The BidX Chain AI platform combines ML prediction with blockchain security for fair auctions.',
+    'Use the ML Suggested Bid feature for data-driven bidding. It analyzes velocity and regression!',
+  ];
+  return defaults[Math.floor(Math.random() * defaults.length)];
+}
+
+// ─── HELPERS ───
+function generateTxHash() {
+  const hash = '0x' + Array.from({length:64}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+  return hash;
+}
+
+function showTxHash(hash) {
+  document.getElementById('tx-area').style.display = 'block';
+  document.getElementById('tx-hash-display').textContent = hash;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── TOAST NOTIFICATIONS ───
+function showToast(msg, type = 'info') {
+  const toast = document.createElement('div');
+  const colors = { success: 'var(--neon-green)', error: 'var(--neon-pink)', info: 'var(--neon-cyan)' };
+  toast.style.cssText = `
+    position:fixed;top:80px;right:24px;z-index:9999;
+    background:rgba(3,7,18,0.95);
+    border:1px solid ${colors[type]};
+    border-radius:8px;padding:12px 18px;
+    font-size:13px;font-weight:600;
+    color:${colors[type]};
+    box-shadow:0 0 20px ${colors[type]}33;
+    animation:bidSlide 0.3s ease forwards;
+    max-width:280px;
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
+}
+
+// ─── CONFETTI ───
+function launchConfetti() {
+  const colors = ['#00f5ff','#bf00ff','#00ff88','#ff6b00','#ff0080','#ffffff'];
+  const container = document.getElementById('confetti-container');
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.top = '-10px';
+    piece.style.width = (Math.random() * 8 + 4) + 'px';
+    piece.style.height = (Math.random() * 8 + 4) + 'px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    piece.style.animationDelay = (Math.random() * 1.5) + 's';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 5000);
+  }
+}
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', () => {
+  // Show auction card if no image uploaded (for demo)
+  document.getElementById('auction-card').style.display = 'none';
+  document.getElementById('chart-section').style.display = 'none';
+
+  // Show initial welcome toast after delay
+  setTimeout(() => showToast('Welcome to BidX Chain AI!', 'info'), 800);
+  setTimeout(() => showToast('Connect wallet to get started', 'success'), 2500);
+});
+
+// ─── RESPONSIVE: handle mobile ───
+window.addEventListener('resize', () => {
+  if (window.innerWidth < 900) {
+    document.querySelector('[style*="grid-template-columns"]').style.gridTemplateColumns = '1fr';
+  }
+});
+</script>
+
+</body>
+</html>
